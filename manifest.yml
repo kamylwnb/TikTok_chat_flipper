@@ -1,0 +1,20 @@
+sourcecode:
+  type: git
+  location:
+    origin: https://github.com/kamylwnb/TikTok_chat_flipper
+    commit_sha: placeholder
+
+short_description: "TikTok Live chat display on Flipper Zero via Bluetooth"
+
+description: |
+  Real-time TikTok Live chat monitor for Flipper Zero.
+  Displays chat comments, gifts and follows via Bluetooth Low Energy.
+  Includes Python GUI server with Text-to-Speech, deduplication,
+  auto-reconnect, and optional mode without Flipper Zero.
+
+changelog: "@CHANGELOG.md"
+
+screenshots:
+  - screenshots/1.png
+  - screenshots/2.png
+  - screenshots/3.png
