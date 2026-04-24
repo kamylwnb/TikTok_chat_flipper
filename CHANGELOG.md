@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0] - 2026-04-24
+## Version 1.1.0 - 2026-04-24
 
 **Added**
 - Word-wrap for long chat messages using screen math (128x64 px)
@@ -14,9 +14,9 @@
 
 **Changed**
 - Removed all developer comments from source files
-- Config file (tiktok_server_config.json) excluded from git via .gitignore
+- Config file excluded from git via .gitignore
 
-## [1.0.0] - 2026-04-01
+## Version 1.0.0 - 2026-04-01
 
 **Added**
 - Initial release
