@@ -14,7 +14,7 @@ def install_package(package: str):
     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 def check_and_install_dependencies() -> bool:
-    required = {"TikTokLive": "TikTokLive", "bleak": "bleak"}
+    required = {"TikTokLive": "TikTokLive", "bleak": "bleak", "playsound": "playsound==1.2.2"}
     missing = []
     for import_name, pkg_name in required.items():
         try:
@@ -188,21 +188,10 @@ class TikTokServerGUI:
 
     def _play_sound_thread(self, path: str):
         try:
-            ext = os.path.splitext(path)[1].lower()
-            if ext == ".wav":
-                import winsound
-                winsound.PlaySound(path, winsound.SND_FILENAME)
-            else:
-                escaped = path.replace("'", "''")
-                cmd = (
-                    "$p = New-Object System.Windows.Media.MediaPlayer; "
-                    f"$p.Open([Uri]::new('{escaped}')); "
-                    "$p.Volume = 1.0; Start-Sleep -Milliseconds 100; $p.Play(); "
-                    "while ($p.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; "
-                    "while ($p.Position -lt $p.NaturalDuration.TimeSpan) { Start-Sleep -Milliseconds 100 }"
-                )
-                subprocess.run(["powershell", "-NoProfile", "-Command", cmd], capture_output=True)
+            from playsound import playsound
+            playsound(path, block=True)
         except Exception as e:
+            self._safe_log(f"Błąd odtwarzania dźwięku: {e}")
             self._safe_log(f"Błąd odtwarzania dźwięku: {e}")
 
     def log(self, msg: str):
@@ -377,3 +366,4 @@ if __name__ == "__main__":
     root = Tk()
     app = TikTokServerGUI(root)
     root.mainloop()
+
