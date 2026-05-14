@@ -82,6 +82,7 @@ class TikTokServerGUI:
         self._pending_packets = None
         self._tiktok_connected_at = 0.0
         self._msg_count = 0
+        self._gift_sound_str = ""  # thread-safe kopia ścieżki dźwięku
         
         # TTS Worker
         self._tts_queue = []
@@ -176,6 +177,7 @@ class TikTokServerGUI:
         )
         if path:
             self._gift_sound_path.set(path)
+            self._gift_sound_str = path  # thread-safe kopia
             self._save_config()
             self._safe_log(f"Wybrano dźwięk prezentu: {os.path.basename(path)}")
 
@@ -223,6 +225,7 @@ class TikTokServerGUI:
                 self._select_gift_sound()
         self._save_config()
         self.running = True
+        self._gift_sound_str = self._gift_sound_path.get()  # snapshot przed wątkiem
         self.btn_start.config(state=DISABLED)
         self.btn_stop.config(state=NORMAL)
         threading.Thread(target=self._run_event_loop, args=(user,), daemon=True).start()
@@ -305,12 +308,20 @@ class TikTokServerGUI:
 
         @client.on(GiftEvent)
         async def on_gift(event: GiftEvent):
-            u = (event.user_info.nickname or event.user_info.unique_id or "User")[:16]
-            g = getattr(event.gift, 'name', 'Gift')
-            self._safe_log(f"[GIFT] {u} wysłał {g}")
-            if self._gift_sound_path.get():
-                self._play_gift_sound(self._gift_sound_path.get())
-            await self._queue_packet(MSG_TYPE_GIFT, u, f"Prezent: {g}")
+            try:
+                u = (getattr(event.user, 'nickname', None) or getattr(event.user, 'unique_id', None) or "User")[:16]
+                g = getattr(event.gift, 'name', None) or 'Gift'
+                # Odtwarzaj dźwięk przy każdym gifcie (również podczas streaka)
+                self._safe_log(f"[GIFT] {u} wysłał {g}")
+                if self._gift_sound_str:
+                    self._play_gift_sound(self._gift_sound_str)
+                # Pakiet BLE tylko na końcu streaka lub gdy nie-streakable
+                is_streakable = getattr(event.gift, 'streakable', False)
+                is_streaking = getattr(event, 'streaking', False)
+                if not is_streakable or not is_streaking:
+                    await self._queue_packet(MSG_TYPE_GIFT, u, f"Prezent: {g}")
+            except Exception as e:
+                self._safe_log(f"[GIFT] błąd obsługi: {e}")
 
         retry = 0
         while self.running and retry < 3:
